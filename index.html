@@ -2,16 +2,32 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Radar Chart with Sliders</title>
+  <title>Radar Chart</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
+    :root {
+      --bg: #ffffff;
+      --text: #000000;
+      --slider: #444;
+      --accent: #ff6384;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1e1e1e;
+        --text: #ffffff;
+        --slider: #ccc;
+      }
+    }
+
     body {
       font-family: sans-serif;
-      background: #ffffff;
+      background: var(--bg);
+      color: var(--text);
       margin: 0;
       padding: 20px;
     }
@@ -29,16 +45,29 @@
       display: block;
       margin-bottom: 4px;
     }
+
+    button {
+      margin-top: 10px;
+      margin-right: 8px;
+      padding: 6px 10px;
+      cursor: pointer;
+    }
   </style>
 </head>
 
 <body>
   <div class="container">
     <canvas id="radarChart"></canvas>
+
     <div id="sliders"></div>
+
+    <button id="saveBtn">Save values</button>
+    <button id="loadBtn">Load values</button>
   </div>
 
   <script>
+    const STORAGE_KEY = 'radar-values';
+
     const labels = [
       'Eating',
       'Drinking',
@@ -49,7 +78,13 @@
       'Running'
     ];
 
-    const values = [65, 59, 90, 81, 56, 55, 40];
+    let values = [65, 59, 90, 81, 56, 55, 40];
+
+    // Load saved values automatically if they exist
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      values = JSON.parse(saved);
+    }
 
     const ctx = document.getElementById('radarChart');
 
@@ -58,22 +93,32 @@
       data: {
         labels: labels,
         datasets: [{
-          label: 'My Life Stats',
           data: values,
           fill: true,
-          backgroundColor: 'rgba(255, 99, 132, 0.2)',
+          backgroundColor: 'rgba(255, 99, 132, 0.25)',
           borderColor: 'rgb(255, 99, 132)',
           pointBackgroundColor: 'rgb(255, 99, 132)'
         }]
       },
       options: {
-        responsive: true,
+        plugins: {
+          legend: {
+            display: false   // removes legend
+          }
+        },
         scales: {
           r: {
             min: 0,
             max: 100,
             ticks: {
-              stepSize: 20
+              stepSize: 20,
+              color: getComputedStyle(document.body).color
+            },
+            grid: {
+              color: 'rgba(128,128,128,0.3)'
+            },
+            pointLabels: {
+              color: getComputedStyle(document.body).color
             }
           }
         }
@@ -82,29 +127,53 @@
 
     const slidersDiv = document.getElementById('sliders');
 
-    labels.forEach((label, i) => {
-      const wrapper = document.createElement('div');
-      wrapper.className = 'slider';
+    function buildSliders() {
+      slidersDiv.innerHTML = '';
 
-      const text = document.createElement('label');
-      text.textContent = `${label}: ${values[i]}`;
+      labels.forEach((label, i) => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'slider';
 
-      const slider = document.createElement('input');
-      slider.type = 'range';
-      slider.min = 0;
-      slider.max = 100;
-      slider.value = values[i];
+        const text = document.createElement('label');
+        text.textContent = `${label}: ${values[i]}`;
 
-      slider.oninput = () => {
-        values[i] = Number(slider.value);
-        text.textContent = `${label}: ${slider.value}`;
+        const slider = document.createElement('input');
+        slider.type = 'range';
+        slider.min = 0;
+        slider.max = 100;
+        slider.value = values[i];
+
+        slider.oninput = () => {
+          values[i] = Number(slider.value);
+          text.textContent = `${label}: ${slider.value}`;
+          chart.update();
+        };
+
+        wrapper.appendChild(text);
+        wrapper.appendChild(slider);
+        slidersDiv.appendChild(wrapper);
+      });
+    }
+
+    buildSliders();
+
+    document.getElementById('saveBtn').onclick = () => {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(values));
+      alert('Values saved on this device.');
+    };
+
+    document.getElementById('loadBtn').onclick = () => {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        values = JSON.parse(saved);
+        chart.data.datasets[0].data = values;
+        buildSliders();
         chart.update();
-      };
-
-      wrapper.appendChild(text);
-      wrapper.appendChild(slider);
-      slidersDiv.appendChild(wrapper);
-    });
+      } else {
+        alert('No saved values found.');
+      }
+    };
   </script>
 </body>
 </html>
+
