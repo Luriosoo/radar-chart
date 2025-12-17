@@ -5,8 +5,8 @@
   <title>Radar Chart</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Chart.js (stable) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
   <style>
     :root {
@@ -22,11 +22,11 @@
     }
 
     body {
-      font-family: sans-serif;
-      background: var(--bg);
-      color: var(--text);
       margin: 0;
       padding: 20px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: sans-serif;
     }
 
     .container {
@@ -34,160 +34,151 @@
       margin: auto;
     }
 
+    canvas {
+      width: 100%;
+      height: 420px;
+      display: block;
+    }
+
     .slider {
       margin: 12px 0;
     }
 
-    .slider label {
-      display: block;
-      margin-bottom: 4px;
-    }
-
     button {
       margin-top: 10px;
-      margin-right: 8px;
-      padding: 6px 10px;
-      cursor: pointer;
+      margin-right: 6px;
     }
-
-    canvas {
-      width: 100%;
-      height: 400px;
-    }
-
   </style>
 </head>
 
 <body>
   <div class="container">
     <canvas id="radarChart"></canvas>
-
     <div id="sliders"></div>
-
     <button id="saveBtn">Save values</button>
     <button id="loadBtn">Load values</button>
   </div>
 
   <script>
-    const STORAGE_KEY = 'radar-values';
-    const WEEK_KEY = 'radar-week';
+    window.addEventListener('load', () => {
+      if (typeof Chart === 'undefined') {
+        alert('Chart.js failed to load');
+        return;
+      }
 
-    const labels = [
-      'Eating',
-      'Drinking',
-      'Sleeping',
-      'Designing',
-      'Coding',
-      'Cycling',
-      'Running'
-    ];
+      const STORAGE_KEY = 'radar-values';
+      const WEEK_KEY = 'radar-week';
 
-    const defaultValues = [65, 59, 90, 81, 56, 55, 40];
-    let values = [...defaultValues];
+      const labels = [
+        'Eating',
+        'Drinking',
+        'Sleeping',
+        'Designing',
+        'Coding',
+        'Cycling',
+        'Running'
+      ];
 
-    function getWeekNumber(date = new Date()) {
-      const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-      const dayNum = d.getUTCDay() || 7;
-      d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-      const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-      return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
-    }
+      const defaultValues = [65, 59, 90, 81, 56, 55, 40];
+      let values = [...defaultValues];
 
-    const currentWeek = getWeekNumber();
-    const savedWeek = localStorage.getItem(WEEK_KEY);
-    const savedValues = localStorage.getItem(STORAGE_KEY);
+      function getWeekNumber(d = new Date()) {
+        d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+        const dayNum = d.getUTCDay() || 7;
+        d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+        const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+        return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+      }
 
-    if (savedValues && savedWeek == currentWeek) {
-      values = JSON.parse(savedValues);
-    } else {
-      localStorage.setItem(WEEK_KEY, currentWeek);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(values));
-    }
+      const currentWeek = getWeekNumber();
+      const savedWeek = localStorage.getItem(WEEK_KEY);
+      const savedValues = localStorage.getItem(STORAGE_KEY);
 
-    const ctx = document.getElementById('radarChart');
+      if (savedValues && savedWeek == currentWeek) {
+        values = JSON.parse(savedValues);
+      }
 
-    const chart = new Chart(ctx, {
-      type: 'radar',
-      data: {
-        labels: labels,
-        datasets: [{
-          data: values,
-          fill: true,
-          backgroundColor: 'rgba(255, 99, 132, 0.25)',
-          borderColor: 'rgb(255, 99, 132)',
-          pointBackgroundColor: 'rgb(255, 99, 132)'
-        }]
-      },
-      options: {
-        maintainAspectRatio:false,
-        plugins: {
-          legend: { display: false }
+      const ctx = document.getElementById('radarChart').getContext('2d');
+
+      const chart = new Chart(ctx, {
+        type: 'radar',
+        data: {
+          labels,
+          datasets: [{
+            data: values,
+            fill: true,
+            backgroundColor: 'rgba(255,99,132,0.25)',
+            borderColor: 'rgb(255,99,132)',
+            pointBackgroundColor: 'rgb(255,99,132)'
+          }]
         },
-        scales: {
-          r: {
-            min: 0,
-            max: 100,
-            ticks: {
-              display: false   // removes 0–100 numbers
-            },
-            grid: {
-              color: 'rgba(128,128,128,0.3)'
-            },
-            pointLabels: {
-              color: getComputedStyle(document.body).color
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            r: {
+              min: 0,
+              max: 100,
+              ticks: { display: false },
+              grid: { color: 'rgba(128,128,128,0.3)' },
+              pointLabels: {
+                color: getComputedStyle(document.body).color
+              }
             }
           }
         }
-      }
-    });
-
-    const slidersDiv = document.getElementById('sliders');
-
-    function buildSliders() {
-      slidersDiv.innerHTML = '';
-
-      labels.forEach((label, i) => {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'slider';
-
-        const text = document.createElement('label');
-        text.textContent = `${label}: ${values[i]}`;
-
-        const slider = document.createElement('input');
-        slider.type = 'range';
-        slider.min = 0;
-        slider.max = 100;
-        slider.value = values[i];
-
-        slider.oninput = () => {
-          values[i] = Number(slider.value);
-          text.textContent = `${label}: ${slider.value}`;
-          chart.update();
-        };
-
-        wrapper.appendChild(text);
-        wrapper.appendChild(slider);
-        slidersDiv.appendChild(wrapper);
       });
-    }
 
-    buildSliders();
+      const slidersDiv = document.getElementById('sliders');
 
-    document.getElementById('saveBtn').onclick = () => {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(values));
-      localStorage.setItem(WEEK_KEY, currentWeek);
-      alert('Values saved for this week.');
-    };
+      function buildSliders() {
+        slidersDiv.innerHTML = '';
+        labels.forEach((label, i) => {
+          const wrap = document.createElement('div');
+          wrap.className = 'slider';
 
-    document.getElementById('loadBtn').onclick = () => {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        values = JSON.parse(saved);
-        chart.data.datasets[0].data = values;
-        buildSliders();
-        chart.update();
+          const text = document.createElement('label');
+          text.textContent = `${label}: ${values[i]}`;
+
+          const slider = document.createElement('input');
+          slider.type = 'range';
+          slider.min = 0;
+          slider.max = 100;
+          slider.value = values[i];
+
+          slider.oninput = () => {
+            values[i] = Number(slider.value);
+            text.textContent = `${label}: ${slider.value}`;
+            chart.update();
+          };
+
+          wrap.appendChild(text);
+          wrap.appendChild(slider);
+          slidersDiv.appendChild(wrap);
+        });
       }
-    };
+
+      buildSliders();
+
+      document.getElementById('saveBtn').onclick = () => {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(values));
+        localStorage.setItem(WEEK_KEY, currentWeek);
+        alert('Saved for this week');
+      };
+
+      document.getElementById('loadBtn').onclick = () => {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          values = JSON.parse(saved);
+          chart.data.datasets[0].data = values;
+          buildSliders();
+          chart.update();
+        }
+      };
+    });
   </script>
 </body>
 </html>
