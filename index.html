@@ -74,7 +74,7 @@
       'Studying'
     ];
 
-    const defaultValues = [0, 0, 0, 0, 0, 0];
+    const defaultValues = [100, 80, 60, 40, 20, 30];
 
     // ---------- WEEK HANDLING ----------
     function getWeekId(date = new Date()) {
@@ -113,7 +113,7 @@
         }]
       },
       options: {
-        responsive: false, // IMPORTANT: stability
+        responsive: true, // IMPORTANT: stability
         plugins: {
           legend: { display: false }
         },
