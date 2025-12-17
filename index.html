@@ -169,4 +169,18 @@
     document.getElementById('saveBtn').onclick = () => {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(values));
       localStorage.setItem(WEEK_KEY, currentWeek);
-      alert('Values saved fo
+      alert('Values saved for this week.');
+    };
+
+    document.getElementById('loadBtn').onclick = () => {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        values = JSON.parse(saved);
+        chart.data.datasets[0].data = values;
+        buildSliders();
+        chart.update();
+      }
+    };
+  </script>
+</body>
+</html>
