@@ -12,15 +12,12 @@
     :root {
       --bg: #ffffff;
       --text: #000000;
-      --slider: #444;
-      --accent: #ff6384;
     }
 
     @media (prefers-color-scheme: dark) {
       :root {
         --bg: #1e1e1e;
         --text: #ffffff;
-        --slider: #ccc;
       }
     }
 
@@ -67,6 +64,7 @@
 
   <script>
     const STORAGE_KEY = 'radar-values';
+    const WEEK_KEY = 'radar-week';
 
     const labels = [
       'Eating',
@@ -78,12 +76,26 @@
       'Running'
     ];
 
-    let values = [65, 59, 90, 81, 56, 55, 40];
+    const defaultValues = [65, 59, 90, 81, 56, 55, 40];
+    let values = [...defaultValues];
 
-    // Load saved values automatically if they exist
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      values = JSON.parse(saved);
+    function getWeekNumber(date = new Date()) {
+      const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+      const dayNum = d.getUTCDay() || 7;
+      d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+      const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+      return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+    }
+
+    const currentWeek = getWeekNumber();
+    const savedWeek = localStorage.getItem(WEEK_KEY);
+    const savedValues = localStorage.getItem(STORAGE_KEY);
+
+    if (savedValues && savedWeek == currentWeek) {
+      values = JSON.parse(savedValues);
+    } else {
+      localStorage.setItem(WEEK_KEY, currentWeek);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(values));
     }
 
     const ctx = document.getElementById('radarChart');
@@ -102,17 +114,14 @@
       },
       options: {
         plugins: {
-          legend: {
-            display: false   // removes legend
-          }
+          legend: { display: false }
         },
         scales: {
           r: {
             min: 0,
             max: 100,
             ticks: {
-              stepSize: 20,
-              color: getComputedStyle(document.body).color
+              display: false   // removes 0–100 numbers
             },
             grid: {
               color: 'rgba(128,128,128,0.3)'
@@ -159,21 +168,5 @@
 
     document.getElementById('saveBtn').onclick = () => {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(values));
-      alert('Values saved on this device.');
-    };
-
-    document.getElementById('loadBtn').onclick = () => {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        values = JSON.parse(saved);
-        chart.data.datasets[0].data = values;
-        buildSliders();
-        chart.update();
-      } else {
-        alert('No saved values found.');
-      }
-    };
-  </script>
-</body>
-</html>
-
+      localStorage.setItem(WEEK_KEY, currentWeek);
+      alert('Values saved fo
