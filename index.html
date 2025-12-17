@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Radar Chart</title>
+  <title>Responsive Smart Radar Chart</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <!-- Chart.js stable UMD build -->
@@ -30,24 +30,18 @@
     }
 
     .container {
-      max-width: 600px;
+      max-width: 600px;  /* max width of chart container */
       margin: auto;
     }
 
     canvas {
+      width: 100%;      /* fills container width */
+      height: auto;     /* preserves aspect ratio */
       display: block;
-      width: 100%;
-      height: auto;
-      margin: auto;
     }
 
     .slider {
       margin: 12px 0;
-      background: 'rgb(#DDFFF7)';
-    }
-
-    .slider:hover {
-      opacity: 1; /* Fully shown on mouse-over */
     }
 
     button {
@@ -69,14 +63,14 @@
     // ---------- CONFIG ----------
     const STORAGE_KEY = 'radar-values';
     const WEEK_KEY = 'radar-week';
-    const LABELS_KEY = 'radar-labels'; // track labels to detect changes
+    const LABELS_KEY = 'radar-labels';
 
     const labels = [
-      'Sleeping',
-      'Korean',
       'Workout',
-      'Studying',
+      'Korean',
+      'Sleeping',
       'Reading',
+      'Studying',
       'Diarying'
     ];
 
@@ -105,10 +99,8 @@
       savedWeek !== currentWeek;
 
     if (!needReset) {
-      // Safe to load saved values
       values = JSON.parse(savedValues);
     } else {
-      // Save defaults to localStorage
       localStorage.setItem(WEEK_KEY, currentWeek);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(values));
       localStorage.setItem(LABELS_KEY, JSON.stringify(labels));
@@ -130,8 +122,8 @@
         }]
       },
       options: {
-        maintainAspectRatio: true,
-        responsive: true,
+        responsive: true,           // allow chart to scale
+        maintainAspectRatio: true,  // keep proportions
         plugins: {
           legend: { display: false }
         },
