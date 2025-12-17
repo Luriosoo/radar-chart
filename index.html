@@ -5,7 +5,7 @@
   <title>Radar Chart</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- Chart.js (stable UMD build) -->
+  <!-- Chart.js stable UMD build -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
   <style>
@@ -64,17 +64,19 @@
     // ---------- CONFIG ----------
     const STORAGE_KEY = 'radar-values';
     const WEEK_KEY = 'radar-week';
+    const LABELS_KEY = 'radar-labels'; // track labels to detect changes
 
     const labels = [
-      'Sleep',
-      'Workout',
-      'Diarying',
-      'Korean',
-      'Reading',
-      'Studying'
+      'Eating',
+      'Drinking',
+      'Sleeping',
+      'Designing',
+      'Coding',
+      'Cycling',
+      'Running'
     ];
 
-    const defaultValues = [100, 80, 60, 40, 20, 30];
+    const defaultValues = [65, 59, 90, 81, 56, 55, 40];
 
     // ---------- WEEK HANDLING ----------
     function getWeekId(date = new Date()) {
@@ -87,14 +89,25 @@
     const currentWeek = getWeekId();
     let values = [...defaultValues];
 
+    // ---------- SMART LOCALSTORAGE ----------
     const savedWeek = localStorage.getItem(WEEK_KEY);
     const savedValues = localStorage.getItem(STORAGE_KEY);
+    const savedLabels = localStorage.getItem(LABELS_KEY);
 
-    if (savedValues && savedWeek === currentWeek) {
+    const needReset =
+      !savedValues ||
+      !savedLabels ||
+      savedLabels !== JSON.stringify(labels) ||
+      savedWeek !== currentWeek;
+
+    if (!needReset) {
+      // Safe to load saved values
       values = JSON.parse(savedValues);
     } else {
+      // Save defaults to localStorage
       localStorage.setItem(WEEK_KEY, currentWeek);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(values));
+      localStorage.setItem(LABELS_KEY, JSON.stringify(labels));
     }
 
     // ---------- CHART ----------
@@ -107,13 +120,13 @@
         datasets: [{
           data: values,
           fill: true,
-          backgroundColor: 'rgba(107, 39, 55,0.25)',
-          borderColor: 'rgb(107, 39, 55)',
-          pointBackgroundColor: 'rgb(107, 39, 55)'
+          backgroundColor: 'rgba(255,99,132,0.25)',
+          borderColor: 'rgb(255,99,132)',
+          pointBackgroundColor: 'rgb(255,99,132)'
         }]
       },
       options: {
-        responsive: true, // IMPORTANT: stability
+        responsive: false,
         plugins: {
           legend: { display: false }
         },
@@ -123,9 +136,7 @@
             max: 100,
             ticks: { display: false },
             grid: { color: 'rgba(128,128,128,0.3)' },
-            pointLabels: {
-              color: getComputedStyle(document.body).color
-            }
+            pointLabels: { color: getComputedStyle(document.body).color }
           }
         }
       }
@@ -167,6 +178,7 @@
     document.getElementById('saveBtn').onclick = () => {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(values));
       localStorage.setItem(WEEK_KEY, currentWeek);
+      localStorage.setItem(LABELS_KEY, JSON.stringify(labels));
       alert('Saved for this week');
     };
 
