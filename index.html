@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Radar Chart with Sliders</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #ffffff;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: auto;
+    }
+
+    .slider {
+      margin: 12px 0;
+    }
+
+    .slider label {
+      display: block;
+      margin-bottom: 4px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <canvas id="radarChart"></canvas>
+    <div id="sliders"></div>
+  </div>
+
+  <script>
+    const labels = [
+      'Eating',
+      'Drinking',
+      'Sleeping',
+      'Designing',
+      'Coding',
+      'Cycling',
+      'Running'
+    ];
+
+    const values = [65, 59, 90, 81, 56, 55, 40];
+
+    const ctx = document.getElementById('radarChart');
+
+    const chart = new Chart(ctx, {
+      type: 'radar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'My Life Stats',
+          data: values,
+          fill: true,
+          backgroundColor: 'rgba(255, 99, 132, 0.2)',
+          borderColor: 'rgb(255, 99, 132)',
+          pointBackgroundColor: 'rgb(255, 99, 132)'
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          r: {
+            min: 0,
+            max: 100,
+            ticks: {
+              stepSize: 20
+            }
+          }
+        }
+      }
+    });
+
+    const slidersDiv = document.getElementById('sliders');
+
+    labels.forEach((label, i) => {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'slider';
+
+      const text = document.createElement('label');
+      text.textContent = `${label}: ${values[i]}`;
+
+      const slider = document.createElement('input');
+      slider.type = 'range';
+      slider.min = 0;
+      slider.max = 100;
+      slider.value = values[i];
+
+      slider.oninput = () => {
+        values[i] = Number(slider.value);
+        text.textContent = `${label}: ${slider.value}`;
+        chart.update();
+      };
+
+      wrapper.appendChild(text);
+      wrapper.appendChild(slider);
+      slidersDiv.appendChild(wrapper);
+    });
+  </script>
+</body>
+</html>
